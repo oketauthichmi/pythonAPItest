@@ -19,5 +19,5 @@ class Register(models.Model):
     RegisterId = models.AutoField(primary_key=True)
     UserName = models.CharField(max_length=200)
     Email = models.EmailField(max_length=200)
-    Password = models.CharField(max_length=50)
+    Password = models.CharField(max_length=100)
     Group = models.CharField(max_length=200)

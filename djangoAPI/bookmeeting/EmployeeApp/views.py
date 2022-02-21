@@ -1,3 +1,4 @@
+import bcrypt
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
@@ -65,10 +66,12 @@ def employeeApi(request, id=0):
 
 @csrf_exempt
 def registerApi(request):
+    #lấy dữ liệu từ database
     if request.method == 'GET':
         registers = Register.objects.all()
         registers_serializer = RegisterSerializer(registers, many=True)
         return JsonResponse(registers_serializer.data, safe=False)
+    #thêm dữ liệu vào database
     elif request.method == 'POST':
         registers_data = JSONParser().parse(request)
         registers_serializer = RegisterSerializer(data=registers_data)
@@ -76,15 +79,23 @@ def registerApi(request):
         registers_serializer_checkuser = RegisterSerializer(registersChekuser, many=True)
         #if (registers_data['UserName']==i['UserName'] for i in registers_serializer_checkuser.data):
             #return JsonResponse('Trùng username')
+        #xét trường hợp trùng username và email
         for i in registers_serializer_checkuser.data:
             if((registers_data['UserName']==i['UserName'])==True):
                 return JsonResponse("trùng username", safe=False)
             if ((registers_data['Email'] == i['Email']) == True):
                 return JsonResponse("đã tồn tại email", safe=False)
+        #print(registers_data)
+        registers_data['Password'] = bcrypt.hashpw(registers_data['Password'].encode('utf-8'), bcrypt.gensalt())
+        print(registers_data['Password'])
+        print(registers_data)
+        #print(registers_serializer)
+        #print(registers_serializer.is_valid())
         if registers_serializer.is_valid():
-            registers_serializer.save()
-            return JsonResponse("thành công", safe=False)
+            #registers_serializer.save()
+            return JsonResponse(registers_serializer.data, safe=False)
         return JsonResponse("thất bại", safe=False)
+    #cập nhập thông tin
     elif request.method == 'PUT':
         registers_data = JSONParser().parse(request)
         registers = Register.objects.get(RegisterId=registers_data['RegisterId'])
